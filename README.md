@@ -1,0 +1,2 @@
+quodlibet_plugins
+=================
