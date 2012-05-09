@@ -54,7 +54,7 @@ else:
 
 import os
 import signal
-from AppKit import NSSystemDefined, NSEvent
+from AppKit import NSKeyUp, NSSystemDefined, NSEvent
 import Quartz
 
 class MacKeyEventsTap(object):
@@ -73,8 +73,7 @@ class MacKeyEventsTap(object):
             data = keyEvent.data1()
             keyCode = (data & 0xFFFF0000) >> 16
             keyState = (data & 0xFF00) >> 8
-            # keyState 11 is key up.
-            if keyState == 11 and keyCode in self._keyControls:
+            if keyState == NSKeyUp and keyCode in self._keyControls:
                 self.sendControl(self._keyControls[keyCode])
 
     def sendControl(self, control):
