@@ -16,7 +16,6 @@
 import subprocess
 import sys
 try:
-    from quodlibet import const
     from quodlibet.plugins.events import EventPlugin
 except ImportError:
     # When executing the event tap process, we may not be able to import
@@ -38,7 +37,7 @@ else:
 
         def enabled(self):
             # Start the event capturing process
-            self.__eventsapp = subprocess.Popen((sys.executable, __file__, const.CONTROL))
+            self.__eventsapp = subprocess.Popen((sys.executable, __file__))
 
         def disabled(self):
             if self.__eventsapp is not None:
@@ -52,19 +51,17 @@ else:
 #
 
 
-import os
-import signal
+from quodlibet.remote import Remote, RemoteError
 from AppKit import NSKeyUp, NSSystemDefined, NSEvent
 import Quartz
 
 class MacKeyEventsTap(object):
-    def __init__(self, controlPath):
+    def __init__(self):
         self._keyControls = {
             16: 'play-pause',
             19: 'next',
             20: 'previous',
         }
-        self.controlPath = controlPath
 
     def eventTap(self, proxy, type_, event, refcon):
         # Convert the Quartz CGEvent into something more useful
@@ -78,23 +75,16 @@ class MacKeyEventsTap(object):
 
     def sendControl(self, control):
         # Send our control message to QL.
-        if not os.path.exists(self.controlPath):
+        if not Remote.remote_exists():
             sys.exit()
         try:
-            # This is a total abuse of Python! Hooray!
-            # Totally copied from the quodlibet command line handler too..
-            signal.signal(signal.SIGALRM, lambda: "" + 2)
-            signal.alarm(1)
-            f = file(self.controlPath, "w")
-            signal.signal(signal.SIGALRM, signal.SIG_IGN)
-            f.write(control)
-            f.close()
-        except (OSError, IOError, TypeError):
+            Remote.send_message(control)
+        except RemoteError:
             sys.exit()
 
     @classmethod
-    def runEventsCapture(cls, controlPath):
-        tapHandler = cls(controlPath)
+    def runEventsCapture(cls):
+        tapHandler = cls()
         tap = Quartz.CGEventTapCreate(
             Quartz.kCGSessionEventTap, # Session level is enough for our needs
             Quartz.kCGHeadInsertEventTap, # Insert wherever, we do not filter
@@ -118,4 +108,4 @@ class MacKeyEventsTap(object):
 
 if __name__ == '__main__':
     # In the subprocess, capture media key events
-    MacKeyEventsTap.runEventsCapture(sys.argv[1])
+    MacKeyEventsTap.runEventsCapture()
