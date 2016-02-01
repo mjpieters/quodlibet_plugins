@@ -51,7 +51,7 @@ else:
 #
 
 from quodlibet.remote import Remote, RemoteError
-from AppKit import NSKeyUp, NSSystemDefined, NSEvent
+from AppKit import NSKeyUp, NSSystemDefined, NSEvent, NSApp
 import Quartz
 
 
@@ -70,8 +70,10 @@ class MacKeyEventsTap(object):
             data = keyEvent.data1()
             keyCode = (data & 0xFFFF0000) >> 16
             keyState = (data & 0xFF00) >> 8
-            if keyState == NSKeyUp and keyCode in self._keyControls:
-                self.sendControl(self._keyControls[keyCode])
+            if keyCode in self._keyControls:
+                if keyState == NSKeyUp:
+                    self.sendControl(self._keyControls[keyCode])
+                return None
 
     def sendControl(self, control):
         # Send our control message to QL.
@@ -90,8 +92,8 @@ class MacKeyEventsTap(object):
             Quartz.kCGSessionEventTap,
             # Insert wherever, we do not filter
             Quartz.kCGHeadInsertEventTap,
-            # Listening is enough
-            Quartz.kCGEventTapOptionListenOnly,
+            # Active, to swallow the play/pause event
+            Quartz.kCGEventTapOptionDefault,
             # NSSystemDefined for mmedia keys
             Quartz.CGEventMaskBit(NSSystemDefined),
             tapHandler.eventTap,
@@ -106,8 +108,10 @@ class MacKeyEventsTap(object):
         )
         # Enable the tap
         Quartz.CGEventTapEnable(tap, True)
+        # Hide the QuodLibet application icon for this subprocess
+        NSApp.setActivationPolicy_(2)
         # and run! This won't return until we exit or are terminated.
-        Quartz.CFRunLoopRun()
+        NSApp.run()
 
 
 if __name__ == '__main__':
