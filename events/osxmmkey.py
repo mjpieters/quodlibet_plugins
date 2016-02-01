@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2012 Martijn Pieters <mj@zopatista.com>
+# Copyright 2012-2016 Martijn Pieters <mj@zopatista.com>
 #
 # This plugin is needed for quod libet to handle multimedia keys under Mac
 # OS X.
@@ -12,7 +12,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
 # published by the Free Software Foundation
-
 import subprocess
 import sys
 try:
@@ -26,8 +25,9 @@ else:
 
     class OSXMMKey(EventPlugin):
         PLUGIN_ID = "OSXMMKey"
-        PLUGIN_NAME = _("Mac OS X Multimedia Keys")
-        PLUGIN_DESC = _("Enable Mac OS X Multimedia Shortcut Keys.\n\n"
+        PLUGIN_NAME = _("Mac OS X Multimedia Keys")  # noqa - _ is a QL global
+        PLUGIN_DESC = _(                             # noqa - _ is a QL global
+            "Enable Mac OS X Multimedia Shortcut Keys.\n\n"
             "Requires the PyObjC bindings (with both the Cocoa and Quartz "
             "framework bridges), and that access for assistive devices "
             "is enabled (see the Universal Access preference pane).")
@@ -46,14 +46,14 @@ else:
 
 
 #
-# Quartz event tap, listens for media key events and translates these to 
+# Quartz event tap, listens for media key events and translates these to
 # control messages for quodlibet.
 #
-
 
 from quodlibet.remote import Remote, RemoteError
 from AppKit import NSKeyUp, NSSystemDefined, NSEvent
 import Quartz
+
 
 class MacKeyEventsTap(object):
     def __init__(self):
@@ -66,7 +66,7 @@ class MacKeyEventsTap(object):
     def eventTap(self, proxy, type_, event, refcon):
         # Convert the Quartz CGEvent into something more useful
         keyEvent = NSEvent.eventWithCGEvent_(event)
-        if keyEvent.subtype() is 8: # subtype 8 is media keys
+        if keyEvent.subtype() is 8:  # subtype 8 is media keys
             data = keyEvent.data1()
             keyCode = (data & 0xFFFF0000) >> 16
             keyState = (data & 0xFF00) >> 8
@@ -86,10 +86,14 @@ class MacKeyEventsTap(object):
     def runEventsCapture(cls):
         tapHandler = cls()
         tap = Quartz.CGEventTapCreate(
-            Quartz.kCGSessionEventTap, # Session level is enough for our needs
-            Quartz.kCGHeadInsertEventTap, # Insert wherever, we do not filter
-            Quartz.kCGEventTapOptionListenOnly, # Listening is enough
-            Quartz.CGEventMaskBit(NSSystemDefined), # NSSystemDefined for media keys
+            # Session level is enough for our needs
+            Quartz.kCGSessionEventTap,
+            # Insert wherever, we do not filter
+            Quartz.kCGHeadInsertEventTap,
+            # Listening is enough
+            Quartz.kCGEventTapOptionListenOnly,
+            # NSSystemDefined for mmedia keys
+            Quartz.CGEventMaskBit(NSSystemDefined),
             tapHandler.eventTap,
             None
         )
