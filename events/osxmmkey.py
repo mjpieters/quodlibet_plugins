@@ -74,6 +74,7 @@ class MacKeyEventsTap(object):
                 if keyState == NSKeyUp:
                     self.sendControl(self._keyControls[keyCode])
                 return None
+        return event
 
     def sendControl(self, control):
         # Send our control message to QL.
