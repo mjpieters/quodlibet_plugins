@@ -66,7 +66,7 @@ class MacKeyEventsTap(object):
     def eventTap(self, proxy, type_, event, refcon):
         # Convert the Quartz CGEvent into something more useful
         keyEvent = NSEvent.eventWithCGEvent_(event)
-        if keyEvent.subtype() is 8:  # subtype 8 is media keys
+        if keyEvent.subtype() == 8:  # subtype 8 is media keys
             data = keyEvent.data1()
             keyCode = (data & 0xFFFF0000) >> 16
             keyState = (data & 0xFF00) >> 8
